@@ -1,0 +1,8 @@
+---
+- id: jira-ticket-check
+  args: [--allowed-statuses, In Progress, Code Review]
+  description: Check if JIRA ticket exists and is in an allowed status
+  entry: python jira_ticket_check.py
+  files: ''
+  language: python
+  name: JIRA Ticket Check
