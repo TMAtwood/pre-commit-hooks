@@ -29,7 +29,6 @@ repos:
       - id: debug-statements
       - id: destroyed-symlinks
       - id: detect-private-key
-      #- id: double-quote-string-fixer
       - id: end-of-file-fixer
       - id: forbid-new-submodules
       - id: forbid-submodules
@@ -59,19 +58,18 @@ repos:
       - id: add-trailing-comma
         exclude: ^per_commit/resources/
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.16.0
+    rev: v3.17.0
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.11.1
     hooks:
       - id: mypy
         args: [--strict, --explicit-package-bases, --show-error-codes]
-        additional_dependencies: [types-all]
         exclude: ^per_commit/resources/|testing.resources/
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.8
+    rev: v0.5.6
     hooks:
       - id: ruff
         args: [--fix]
@@ -79,3 +77,12 @@ repos:
         types_or: [python, python3, pyi, jupyter]
       - id: ruff-format
         types_or: [python, python3, pyi, jupyter]
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.3
+    hooks:
+      - id: python-safety-dependencies-check
+  - repo: https://github.com/pypa/pip-audit
+    rev: v2.7.3
+    hooks:
+    - id: pip-audit
+      args: ["-r", "requirements.txt"]
