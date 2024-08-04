@@ -55,21 +55,30 @@ def jira_api_request(endpoint: str) -> Any:
     return response.json()
 
 
-def validate_jira_ticket(ticket_id: str) -> bool:
+def validate_jira_ticket(ticket_id: str, valid_statuses: list[str]) -> bool:
     """
-    Validates a JIRA ticket by checking if it exists and is in the 'In Progress' stage.
+    Validates a JIRA ticket by checking if it exists and is in one of the valid statuses.
 
     Args:
         ticket_id (str): The JIRA ticket ID to validate.
+        valid_statuses (List[str]): A list of valid statuses.
 
     Returns:
-        bool: True if the ticket is valid and in the 'In Progress' stage, False otherwise.
+        bool: True if the ticket is valid and in one of the valid statuses, False otherwise.
     """
     try:
         issue = jira_api_request(f"issue/{ticket_id}")
-        if issue["fields"]["status"]["name"] != "In Progress":
-            print(f"Ticket {ticket_id} is not in the 'In Progress' stage.")
-            return False
+        status_name = issue["fields"]["status"]["name"]
+        if ticket_id.startswith("CR-"):
+            if status_name != "Approved":
+                print(f"CR ticket {ticket_id} is not in the 'Approved' status.")
+                return False
+        else:
+            if status_name not in valid_statuses:
+                print(
+                    f"Ticket {ticket_id} is not in one of the valid statuses: {valid_statuses}",
+                )
+                return False
         return True
     except Exception as e:
         print(f"Failed to validate JIRA ticket {ticket_id}: {e}")
@@ -92,21 +101,34 @@ def main() -> None:
         print("No JIRA ticket found in commit message.")
         sys.exit(1)
 
-    for ticket in tickets:
-        if ticket.startswith("CR-") and CHANGE_REQUEST_REQUIRED:
-            if not validate_jira_ticket(ticket):
-                sys.exit(1)
-        elif not ticket.startswith("CR-"):
-            if not validate_jira_ticket(ticket):
-                sys.exit(1)
+    valid_statuses = ["In Progress"]
+    cr_ticket_found = False
 
-    if CHANGE_REQUEST_REQUIRED and not any(
-        ticket.startswith("CR-") for ticket in tickets
-    ):
-        print(
-            "Change request ticket (CR-) is required but not found in commit message.",
-        )
-        sys.exit(1)
+    if CHANGE_REQUEST_REQUIRED:
+        if len(tickets) < 2:
+            print(
+                "Two tickets are required in the commit message when change request is required.",
+            )
+            sys.exit(1)
+
+        for ticket in tickets:
+            if ticket.startswith("CR-"):
+                cr_ticket_found = True
+                if not validate_jira_ticket(ticket, ["Approved"]):
+                    sys.exit(1)
+            else:
+                if not validate_jira_ticket(ticket, valid_statuses):
+                    sys.exit(1)
+
+        if not cr_ticket_found:
+            print(
+                "Change request ticket (CR-) is required but not found in commit message.",
+            )
+            sys.exit(1)
+    else:
+        for ticket in tickets:
+            if not validate_jira_ticket(ticket, valid_statuses):
+                sys.exit(1)
 
     print("JIRA ticket(s) validated successfully.")
     sys.exit(0)
