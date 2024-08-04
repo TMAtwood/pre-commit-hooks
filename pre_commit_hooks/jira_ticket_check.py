@@ -101,9 +101,9 @@ def main() -> None:
         action="store_true",
         help="Specify if a change request is required.",
     )
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
 
-    change_request_required = args.change_request_required
+    change_request_required = args.change_request_required or CHANGE_REQUEST_REQUIRED
 
     # Your existing logic here, using the change_request_required variable as needed
     print(f"Change request required: {change_request_required}")

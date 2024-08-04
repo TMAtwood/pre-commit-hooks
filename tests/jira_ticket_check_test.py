@@ -113,7 +113,7 @@ def test_main_valid_ticket(
     mock_commit_message_file: Path,
     requests_mock: requests_mock.Mocker,
 ) -> None:
-    monkeypatch.setenv("CHANGE_REQUEST_REQUIRED", "False")
+    monkeypatch.setenv("CHANGE_REQUEST_REQUIRED", "false")
 
     ticket_id = "ABC-123"
     jira_api_url = f"{os.getenv('JIRA_URL')}/rest/api/2/issue/{ticket_id}"
@@ -135,9 +135,7 @@ def test_main_valid_ticket(
 
     with pytest.raises(SystemExit) as e:
         main()
-    assert (
-        e.value.code == 0
-    ), f"Expected exit code 0, but got {e.value.code}. Output: {e.value}"
+    assert e.value.code == 0, f"Expected exit code 0, but got {e.value.code}. Output: {e.value}"
 
 
 def test_main_no_ticket(
