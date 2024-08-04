@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import subprocess
 from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 
 import pytest  # type: ignore
 import requests  # type: ignore
@@ -29,6 +31,28 @@ def set_env_vars(
     monkeypatch.setenv("JIRA_API_TOKEN", "fake_api_token")
     monkeypatch.setenv("JIRA_USERNAME", "fake_username")
     monkeypatch.setenv("CHANGE_REQUEST_REQUIRED", change_request_required)
+
+
+def test_jira_ticket_check_with_change_request(set_env_vars: Any) -> None:
+    result = subprocess.run(
+        [
+            "python3",
+            "pre_commit_hooks/jira_ticket_check.py",
+            "--change-request-required",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert "Change request required: True" in result.stdout
+
+
+def test_jira_ticket_check_without_change_request(set_env_vars: Any) -> None:
+    result = subprocess.run(
+        ["python3", "pre_commit_hooks/jira_ticket_check.py"],
+        capture_output=True,
+        text=True,
+    )
+    assert "Change request required: False" in result.stdout
 
 
 def test_get_commit_message(mock_commit_message_file: Path) -> None:
@@ -84,12 +108,7 @@ def test_validate_jira_ticket_invalid_status(
     assert is_valid is False
 
 
-def test_main_valid_ticket(
-    monkeypatch: pytest.MonkeyPatch,
-    mock_commit_message_file: Path,
-    requests_mock: requests_mock.Mocker,
-) -> None:
-    # Set CHANGE_REQUEST_REQUIRED to "False" for this test
+def test_main_valid_ticket(monkeypatch: pytest.MonkeyPatch, mock_commit_message_file: Path, requests_mock: requests_mock.Mocker) -> None:
     monkeypatch.setenv("CHANGE_REQUEST_REQUIRED", "False")
 
     ticket_id = "ABC-123"
@@ -107,7 +126,6 @@ def test_main_valid_ticket(
     )
 
     import sys
-
     monkeypatch.setattr(sys, "argv", [sys.argv[0], str(mock_commit_message_file)])
 
     with pytest.raises(SystemExit) as e:
