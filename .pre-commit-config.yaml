@@ -99,3 +99,7 @@ repos:
         entry: python pre_commit_hooks/run_vulture.py
         pass_filenames: true
         require_serial: false
+  - repo: https://github.com/PyCQA/bandit
+    rev: '1.7.9'
+    hooks:
+      - id: bandit

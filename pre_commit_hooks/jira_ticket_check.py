@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import sys
@@ -19,6 +20,7 @@ CHANGE_REQUEST_REQUIRED = os.getenv("CHANGE_REQUEST_REQUIRED", "True").lower() i
 
 if not JIRA_API_TOKEN or not JIRA_USERNAME:
     print("JIRA_API_TOKEN and JIRA_USERNAME must be set as environment variables.")
+    print("Exiting with code 1")
     sys.exit(1)
 
 
@@ -55,21 +57,30 @@ def jira_api_request(endpoint: str) -> Any:
     return response.json()
 
 
-def validate_jira_ticket(ticket_id: str) -> bool:
+def validate_jira_ticket(ticket_id: str, valid_statuses: list[str]) -> bool:
     """
-    Validates a JIRA ticket by checking if it exists and is in the 'In Progress' stage.
+    Validates a JIRA ticket by checking if it exists and is in one of the valid statuses.
 
     Args:
         ticket_id (str): The JIRA ticket ID to validate.
+        valid_statuses (List[str]): A list of valid statuses.
 
     Returns:
-        bool: True if the ticket is valid and in the 'In Progress' stage, False otherwise.
+        bool: True if the ticket is valid and in one of the valid statuses, False otherwise.
     """
     try:
         issue = jira_api_request(f"issue/{ticket_id}")
-        if issue["fields"]["status"]["name"] != "In Progress":
-            print(f"Ticket {ticket_id} is not in the 'In Progress' stage.")
-            return False
+        status_name = issue["fields"]["status"]["name"]
+        if ticket_id.startswith("CR-"):
+            if status_name != "Approved":
+                print(f"CR ticket {ticket_id} is not in the 'Approved' status.")
+                return False
+        else:
+            if status_name not in valid_statuses:
+                print(
+                    f"Ticket {ticket_id} is not in one of the valid statuses: {valid_statuses}",
+                )
+                return False
         return True
     except Exception as e:
         print(f"Failed to validate JIRA ticket {ticket_id}: {e}")
@@ -83,6 +94,20 @@ def main() -> None:
     It reads the commit message, extracts JIRA tickets, validates them, and checks for required change request tickets
     if applicable. Exits with status 0 if all checks pass, otherwise exits with status 1.
     """
+
+    parser = argparse.ArgumentParser(description="Check JIRA ticket requirements.")
+    parser.add_argument(
+        "--change-request-required",
+        action="store_true",
+        help="Specify if a change request is required.",
+    )
+    args, unknown = parser.parse_known_args()
+
+    change_request_required = args.change_request_required or CHANGE_REQUEST_REQUIRED
+
+    # Your existing logic here, using the change_request_required variable as needed
+    print(f"Change request required: {change_request_required}")
+
     commit_message = get_commit_message()
 
     ticket_regex = re.compile(r"\b[A-Z]+-\d+\b")
@@ -90,25 +115,40 @@ def main() -> None:
 
     if not tickets:
         print("No JIRA ticket found in commit message.")
+        print("Exiting with code 1")
         sys.exit(1)
 
-    for ticket in tickets:
-        if ticket.startswith("CR-") and CHANGE_REQUEST_REQUIRED:
-            if not validate_jira_ticket(ticket):
-                sys.exit(1)
-        elif not ticket.startswith("CR-"):
-            if not validate_jira_ticket(ticket):
-                sys.exit(1)
+    valid_statuses = ["In Progress"]
+    cr_ticket_found = False
 
-    if CHANGE_REQUEST_REQUIRED and not any(
-        ticket.startswith("CR-") for ticket in tickets
-    ):
-        print(
-            "Change request ticket (CR-) is required but not found in commit message.",
-        )
-        sys.exit(1)
+    if change_request_required:
+        if len(tickets) < 2:
+            print(
+                "Two tickets are required in the commit message when change request is required.",
+            )
+            sys.exit(1)
+
+        for ticket in tickets:
+            if ticket.startswith("CR-"):
+                cr_ticket_found = True
+                if not validate_jira_ticket(ticket, ["Approved"]):
+                    sys.exit(1)
+            else:
+                if not validate_jira_ticket(ticket, valid_statuses):
+                    sys.exit(1)
+
+        if not cr_ticket_found:
+            print(
+                "Change request ticket (CR-) is required but not found in commit message.",
+            )
+            sys.exit(1)
+    else:
+        for ticket in tickets:
+            if not validate_jira_ticket(ticket, valid_statuses):
+                sys.exit(1)
 
     print("JIRA ticket(s) validated successfully.")
+    print("Exiting with code 0")
     sys.exit(0)
 
 
