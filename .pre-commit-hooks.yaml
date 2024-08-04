@@ -1,0 +1,9 @@
+---
+- id: jira-ticket-check
+  name: JIRA Ticket Check
+  description: Check commit message for valid JIRA tickets and ensure they are in the correct stage.
+  entry: python pre_commit_hooks/jira_ticket_check.py
+  language: python
+  require_serial: true
+  files: ^.*$
+  stages: [commit-msg]
