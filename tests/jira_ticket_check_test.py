@@ -130,7 +130,7 @@ def test_main_valid_ticket(monkeypatch: pytest.MonkeyPatch, mock_commit_message_
 
     with pytest.raises(SystemExit) as e:
         main()
-    assert e.value.code == 0
+    assert e.value.code == 0, f"Expected exit code 0, but got {e.value.code}. Output: {e.value}"
 
 
 def test_main_no_ticket(

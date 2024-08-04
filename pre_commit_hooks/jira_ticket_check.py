@@ -21,8 +21,6 @@ CHANGE_REQUEST_REQUIRED = os.getenv("CHANGE_REQUEST_REQUIRED", "True").lower() i
 if not JIRA_API_TOKEN or not JIRA_USERNAME:
     print("JIRA_API_TOKEN and JIRA_USERNAME must be set as environment variables.")
     print("Exiting with code 1")
-    print("Exiting with code 1")
-    print("Exiting with code 1")
     sys.exit(1)
 
 
@@ -105,10 +103,10 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    CHANGE_REQUEST_REQUIRED = args.change_request_required
+    change_request_required = args.change_request_required
 
     # Your existing logic here, using the change_request_required variable as needed
-    print(f"Change request required: {CHANGE_REQUEST_REQUIRED}")
+    print(f"Change request required: {change_request_required}")
 
     commit_message = get_commit_message()
 
@@ -123,7 +121,7 @@ def main() -> None:
     valid_statuses = ["In Progress"]
     cr_ticket_found = False
 
-    if CHANGE_REQUEST_REQUIRED:
+    if change_request_required:
         if len(tickets) < 2:
             print(
                 "Two tickets are required in the commit message when change request is required.",
