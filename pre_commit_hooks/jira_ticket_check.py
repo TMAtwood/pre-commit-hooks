@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import sys
@@ -92,6 +93,20 @@ def main() -> None:
     It reads the commit message, extracts JIRA tickets, validates them, and checks for required change request tickets
     if applicable. Exits with status 0 if all checks pass, otherwise exits with status 1.
     """
+
+    parser = argparse.ArgumentParser(description="Check JIRA ticket requirements.")
+    parser.add_argument(
+        "--change-request-required",
+        action="store_true",
+        help="Specify if a change request is required.",
+    )
+    args = parser.parse_args()
+
+    CHANGE_REQUEST_REQUIRED = args.change_request_required
+
+    # Your existing logic here, using the change_request_required variable as needed
+    print(f"Change request required: {CHANGE_REQUEST_REQUIRED}")
+
     commit_message = get_commit_message()
 
     ticket_regex = re.compile(r"\b[A-Z]+-\d+\b")
