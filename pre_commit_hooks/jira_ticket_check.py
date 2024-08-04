@@ -20,6 +20,9 @@ CHANGE_REQUEST_REQUIRED = os.getenv("CHANGE_REQUEST_REQUIRED", "True").lower() i
 
 if not JIRA_API_TOKEN or not JIRA_USERNAME:
     print("JIRA_API_TOKEN and JIRA_USERNAME must be set as environment variables.")
+    print("Exiting with code 1")
+    print("Exiting with code 1")
+    print("Exiting with code 1")
     sys.exit(1)
 
 
@@ -114,6 +117,7 @@ def main() -> None:
 
     if not tickets:
         print("No JIRA ticket found in commit message.")
+        print("Exiting with code 1")
         sys.exit(1)
 
     valid_statuses = ["In Progress"]
@@ -146,6 +150,7 @@ def main() -> None:
                 sys.exit(1)
 
     print("JIRA ticket(s) validated successfully.")
+    print("Exiting with code 0")
     sys.exit(0)
 
 
