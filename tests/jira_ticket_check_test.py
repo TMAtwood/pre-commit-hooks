@@ -108,7 +108,11 @@ def test_validate_jira_ticket_invalid_status(
     assert is_valid is False
 
 
-def test_main_valid_ticket(monkeypatch: pytest.MonkeyPatch, mock_commit_message_file: Path, requests_mock: requests_mock.Mocker) -> None:
+def test_main_valid_ticket(
+    monkeypatch: pytest.MonkeyPatch,
+    mock_commit_message_file: Path,
+    requests_mock: requests_mock.Mocker,
+) -> None:
     monkeypatch.setenv("CHANGE_REQUEST_REQUIRED", "False")
 
     ticket_id = "ABC-123"
@@ -126,11 +130,14 @@ def test_main_valid_ticket(monkeypatch: pytest.MonkeyPatch, mock_commit_message_
     )
 
     import sys
+
     monkeypatch.setattr(sys, "argv", [sys.argv[0], str(mock_commit_message_file)])
 
     with pytest.raises(SystemExit) as e:
         main()
-    assert e.value.code == 0, f"Expected exit code 0, but got {e.value.code}. Output: {e.value}"
+    assert (
+        e.value.code == 0
+    ), f"Expected exit code 0, but got {e.value.code}. Output: {e.value}"
 
 
 def test_main_no_ticket(
